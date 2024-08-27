@@ -1,33 +1,23 @@
-CREATE TABLE Class (
-    classId INT PRIMARY KEY AUTO_INCREMENT,
-    className VARCHAR(255) NOT NULL,
-    startDate DATE NOT NULL,
-    status BIT
-);
+SELECT studentId,studentName,address
+FROM Student;
 
-CREATE TABLE Student (
-    studentId INT PRIMARY KEY AUTO_INCREMENT,
-    studentName VARCHAR(255) NOT NULL,
-    address VARCHAR(255),
-    phone VARCHAR(255),
-    status BIT,
-    class_id INT,
-    FOREIGN KEY (class_id) REFERENCES Class(classId)
-);
+SELECT *
+FROM Student
+WHERE status = true;
 
-CREATE TABLE Subject (
-    subId INT PRIMARY KEY AUTO_INCREMENT,
-    subName VARCHAR(255) NOT NULL,
-    credit INT DEFAULT 1 CHECK (credit >= 1),
-    status BIT DEFAULT 1
-);
+SELECT *
+FROM Subject
+WHERE credit < 10;
 
-CREATE TABLE Mark (
-    markId INT PRIMARY KEY AUTO_INCREMENT,
-    subjectId INT,
-    studentId INT,
-    mark DOUBLE DEFAULT 0 CHECK (mark >= 0 AND mark <= 100),
-    examtime INT DEFAULT 1,
-    FOREIGN KEY (subjectId) REFERENCES Subject(subId),
-    FOREIGN KEY (studentId) REFERENCES Student(studentId)
-);
+SELECT Student.studentId, Student.studentName, Class.className
+FROM Student join Class  on Student.classId = Class.classID;
+
+SELECT Student.studentId, Student.studentName, Class.className
+FROM Student join Class  on Student.classId = Class.classID;
+WHERE C.ClassName = 'A1';
+
+SELECT s.StudentId, s.StudentName, sub.SubName, m.Mark
+FROM Student s 
+join Mark m on s.studentId = m.studentId 
+join Subject sub on m.subjectId = sub.subId
+WHERE sub.subName = 'CF';
