@@ -1,5 +1,6 @@
 create database Baitap3;
 use Baitap3;
+drop database Baitap3;
 
 create table PhieuXuat(
     soPx int primary key auto_increment,
@@ -25,13 +26,14 @@ create table ChiTietDonDatHang(
 create table VatTu(
     maVT int primary key auto_increment,
     tenVT varchar(255)
-)
+);
 
 create table DonDatHang(
     soHD int primary key auto_increment,
     maNCC int,
-    ngayDH datetime
-)
+    ngayDH datetime,
+    index (maNCC) -- Add an index to the maNCC column
+);
 
 create table PhieuNhap(
     soPn int primary key auto_increment,
@@ -48,11 +50,10 @@ create table PhieuNhapChiTiet(
 );
 
 create table NhaCungCap(
-    maNCC int,
+    maNCC int primary key auto_increment,
     tenNCC varchar(255),
     diachi varchar(255),
-    soDienThoai varchar(20),
-    primary key (maNCC) references DonDatHang(maNCC)
+    soDienThoai varchar(20)
 );
 
 INSERT INTO VatTu (tenVT) VALUES 
@@ -131,21 +132,33 @@ INSERT INTO PhieuNhapChiTiet (soPn, maVT, donGiaNhap, soLuongNhap) VALUES
 (5, 9, 45000, 140),
 (5, 10, 40000, 150);
 
--- Tìn vật tư bán chạy
-SELECT maVT, SUM(soLuongXuat) AS totalSold
-FROM PhieuXuatChiTiet
-GROUP BY maVT
-ORDER BY totalSold DESC;
+-- Hiển thị tất cả vật tự dựa vào phiếu xuất có số lượng lớn hơn 10
+SELECT DISTINCT v.maVT, v.tenVT
+FROM VatTu v
+JOIN PhieuXuatChiTiet pxct ON v.maVT = pxct.maVT
+WHERE pxct.soLuongXuat > 10;
 
--- Tìm danh sách vật tư có trong kho nhiều nhất
-SELECT maVT, SUM(soLuongNhap - soLuongXuat) AS stockRemaining
-FROM PhieuNhapChiTiet 
-LEFT JOIN PhieuXuatChiTiet ON PhieuNhapChiTiet.maVT = PhieuXuatChiTiet.maVT
-GROUP BY PhieuNhapChiTiet.maVT
-ORDER BY stockRemaining DESC;
+-- Hiển thị tất cả vật tư mua vào ngày 12/2/2023
+SELECT DISTINCT v.maVT, v.tenVT
+FROM VatTu v
+JOIN ChiTietDonDatHang ctdh ON v.maVT = ctdh.maVt
+JOIN DonDatHang ddh ON ctdh.soHD = ddh.soHD
+WHERE DATE(ddh.ngayDH) = '2024-02-15';
 
---  Tìm ra danh sách nhà cung cấp có đơn hàng từ ngày 12/2/2024 đến 22/2/2024:
-SELECT DISTINCT NhaCungCap.tenNCC, DonDatHang.ngayDH
+-- Hiển thị tất cả vật tư được nhập vào với đơn giá lớn hơn 1.200.000
+SELECT DISTINCT v.maVT, v.tenVT
+FROM VatTu v
+JOIN PhieuNhapChiTiet pnc ON v.maVT = pnc.maVT
+WHERE pnc.donGiaNhap > 50000;
+
+-- Hiển thị tất cả vật tư được dựa vào phiếu xuất có số lượng lớn hơn 5
+SELECT DISTINCT v.maVT, v.tenVT
+FROM VatTu v
+JOIN PhieuXuatChiTiet pxct ON v.maVT = pxct.maVT
+WHERE pxct.soLuongXuat > 5;
+
+-- Hiển thị tất cả nhà cung cấp ở long biên có SoDienThoai bắt đầu với 09
+SELECT maNCC, tenNCC, diachi, soDienThoai
 FROM NhaCungCap
-JOIN DonDatHang ON NhaCungCap.maNCC = DonDatHang.maNCC
-WHERE DonDatHang.ngayDH BETWEEN '2024-02-12' AND '2024-02-22';
+WHERE soDienThoai LIKE '09%';
+

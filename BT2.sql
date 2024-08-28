@@ -1,5 +1,5 @@
-create database Baitai2;
-use Baitai2;
+create database Baitap2;
+use Baitap2;
 
 create table customer(
     cid int primary key auto_increment,
@@ -24,7 +24,7 @@ create table products(
 create table orderDetail(
     oid int,
     pid int,
-    odQuantity,
+    odQuantity int,
     foreign key (oid) references orders(oid),
     foreign key (pid) references products(pid)
 );
@@ -56,32 +56,51 @@ insert into orderDetail(oid, pid, odQuantity) values
 (2, 5, 8),
 (2, 3, 3);
 
--- Hiển thị các thông tin gồm oID, oDate, oPrice của tất cả các hóa đơn trong bảng Order
-select oid, oDate, oTotalPrice 
-from orders;
-
--- Hiển thị danh sách các khách hàng đã mua hàng, và danh sách sản phẩm được mua bởi các khách hàng đó.
-select customer.cName, products.pName
-from customer
-join orders on customer.cid = orders.cid
-join orderDetail on orders.oid = orderDetail.oid
-join products on orderDetail.pid = products.pid;
+-- 1. Hiển thị tất cả customer có đơn hàng trên 150000
+SELECT DISTINCT c.cid, c.cName, c.cAge
+FROM customer c
+JOIN orders o ON c.cid = o.cid
+WHERE o.oTotalPrice > 150000;
 
 
--- Hiển thị tên những khách hàng không mua bất kỳ một sản phẩm nào
-select cName 
-from customer 
-where cid not in (
-    select cid 
-    from orders
+-- 2. Hiển thị sản phẩm chưa được bán cho bất cứ ai
+SELECT p.pid, p.pName, p.pPrice
+FROM products p
+LEFT JOIN orderDetail od ON p.pid = od.pid
+WHERE od.pid IS NULL;
+
+-- 3. Hiển thị tất cả đơn hàng mua trên 2 sản phẩm
+SELECT o.oid, o.cid, o.oDate, o.oTotalPrice
+FROM orders o
+JOIN orderDetail od ON o.oid = od.oid
+GROUP BY o.oid
+HAVING COUNT(od.pid) > 2;
+
+
+-- 4. Hiển thị đơn hàng có tổng giá tiền lớn nhất
+SELECT oid, cid, oDate, oTotalPrice
+FROM orders
+WHERE oTotalPrice = (
+    SELECT MAX(oTotalPrice)
+    FROM orders
 );
 
 
--- Hiển thị mã hóa đơn, ngày bán và giá tiền của từng hóa đơn (giá một hóa đơn được tính bằng tổng giá bán của từng loại mặt hàng xuất hiện trong hóa đơn. Giá bán của từng loại được tính = odQTY * pPrice)
+-- 5. Hiển thị sản phẩm có giá tiền lớn nhất
+SELECT pid, pName, pPrice
+FROM products
+WHERE pPrice = (
+    SELECT MAX(pPrice)
+    FROM products
+);
 
-select orders.oid, orders.oDate, 
-       SUM(orderDetail.odQuantity * products.pPrice) as oTotalPrice
-from orders
-join orderDetail on orders.oid = orderDetail.oid
-join products on orderDetail.pid = products.pid
-group by orders.oid, orders.oDate;
+-- 6. Hiển thị người dùng nào mua nhiều sản phẩm “Bep Dien” nhất
+SELECT c.cid, c.cName, c.cAge, SUM(od.odQuantity) AS total_quantity
+FROM customer c
+JOIN orders o ON c.cid = o.cid
+JOIN orderDetail od ON o.oid = od.oid
+JOIN products p ON od.pid = p.pid
+WHERE p.pName = 'Bep dien'
+GROUP BY c.cid, c.cName, c.cAge
+ORDER BY total_quantity DESC
+LIMIT 1;
